@@ -32,6 +32,10 @@ def evaluate(tree, genv, lenv)
     left = evaluate tree[1], genv, lenv
     right = evaluate tree[2], genv, lenv
     left == right
+  when "!="
+    left = evaluate tree[1], genv, lenv
+    right = evaluate tree[2], genv, lenv
+    left != right
   when "<"
     left = evaluate tree[1], genv, lenv
     right = evaluate tree[2], genv, lenv
@@ -44,6 +48,10 @@ def evaluate(tree, genv, lenv)
     left = evaluate tree[1], genv, lenv
     right = evaluate tree[2], genv, lenv
     left > right
+  when ">="
+    left = evaluate tree[1], genv, lenv
+    right = evaluate tree[2], genv, lenv
+    left >= right
   when "func_def"
     genv[tree[1]] = ["user_defined", tree[2], tree[3]]
   when "func_call"
@@ -70,6 +78,32 @@ def evaluate(tree, genv, lenv)
     lenv[tree[1]] = evaluate(tree[2], genv, lenv)
   when "var_ref"
     lenv[tree[1]]
+  when "ary_new"
+    ary = []
+    i = 0
+    while tree[i + 1]
+      ary[i] = evaluate(tree[i + 1], genv, lenv)
+      i = i + 1
+    end
+    ary
+  when "ary_ref"
+    ary = evaluate(tree[1], genv, lenv)
+    idx = evaluate(tree[2], genv, lenv)
+    ary[idx]
+  when "ary_assign"
+    ary = evaluate(tree[1], genv, lenv)
+    idx = evaluate(tree[2], genv, lenv)
+    val = evaluate(tree[3], genv, lenv)
+    ary[idx] = val
+  when "hash_new"
+    hsh = {}
+    i = 0
+    while tree[i + 1]
+      key = evaluate(tree[i + 1], genv, lenv)
+      val = evaluate(tree[i + 2], genv, lenv)
+      hsh[key] = val
+      i = i + 2
+    end
   when "if"
     if evaluate(tree[1], genv, lenv)
       evaluate(tree[2], genv, lenv)
@@ -100,5 +134,13 @@ str = minruby_load()
 tree = minruby_parse(str)
 p tree
 lenv = {}
-genv = {"p" => ["builtin", "p"], "raise" => ["builtin", "raise"]}
+genv = {
+  "p" => ["builtin", "p"],
+  "raise" => ["builtin", "raise"],
+  "require" => ["builtin", "require"],
+  "minruby_parse" => ["builtin", "minruby_parse"],
+  "minruby_load" => ["builtin", "minruby_load"],
+  "minruby_call" => ["builtin", "minruby_call"],
+  "simplify" => ["builtin", "simplify"]
+}
 answer = evaluate(tree, genv, lenv)
